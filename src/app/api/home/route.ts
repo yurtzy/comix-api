@@ -1,10 +1,10 @@
 import * as cheerio from 'cheerio';
 
-export const runtime = 'edge';
-
 export async function GET() {
   try {
-    const res = await fetch('https://comix.to/home', {
+    const targetUrl = 'https://comix.to/home';
+    const proxyUrl = `https://script.google.com/macros/s/AKfycbwp4VIpqcx-Dq06Ig7EKCjVqLy5WFDEdmqJTEyE-JwhJQywenfjhb-M1wL4R-i76vij/exec?url=${encodeURIComponent(targetUrl)}`;
+    const res = await fetch(proxyUrl, {
       next: { revalidate: 3600 }
     });
     
@@ -12,7 +12,8 @@ export async function GET() {
       return Response.json({ error: 'Failed to fetch source' }, { status: res.status });
     }
 
-    const html = await res.text();
+    const data = await res.json();
+    const html = data.contents;
     const $ = cheerio.load(html);
 
     const popular: any[] = [];
