@@ -12,8 +12,7 @@ export async function GET() {
       return Response.json({ error: 'Failed to fetch source' }, { status: res.status });
     }
 
-    const data = await res.json();
-    const html = data.contents;
+    const html = await res.text();
     const $ = cheerio.load(html);
 
     const popular: any[] = [];
