@@ -10,12 +10,9 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: 'Missing query parameter "chapterId"' }, { status: 400 });
     }
 
-    const res = await fetch(`https://comix.to/api/v2/chapters/${chapterId}`, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
-        'Referer': 'https://comix.to/'
-      },
+    const targetUrl = `https://comix.to/api/v2/chapters/${chapterId}`;
+    const proxyUrl = `https://script.google.com/macros/s/AKfycbwp4VIpqcx-Dq06Ig7EKCjVqLy5WFDEdmqJTEyE-JwhJQywenfjhb-M1wL4R-i76vij/exec?url=${encodeURIComponent(targetUrl)}`;
+    const res = await fetch(proxyUrl, {
       next: { revalidate: 3600 }
     });
     

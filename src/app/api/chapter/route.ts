@@ -18,12 +18,8 @@ export async function GET(request: NextRequest) {
     apiUrl.searchParams.set('page', page);
     apiUrl.searchParams.set('order[number]', 'desc');
 
-    const res = await fetch(apiUrl.toString(), {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/plain, */*',
-        'Referer': 'https://comix.to/'
-      },
+    const proxyUrl = `https://script.google.com/macros/s/AKfycbwp4VIpqcx-Dq06Ig7EKCjVqLy5WFDEdmqJTEyE-JwhJQywenfjhb-M1wL4R-i76vij/exec?url=${encodeURIComponent(apiUrl.toString())}`;
+    const res = await fetch(proxyUrl, {
       next: { revalidate: 3600 }
     });
     
