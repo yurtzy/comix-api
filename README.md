@@ -1,111 +1,159 @@
-# Comix API
+# Comix API 🚀
 
-A Next.js based API wrapper that proxies and standardizes responses from comix.to. All image URLs returned by the API are automatically prefixed with a local `/api/image` proxy route to bypass client-side CORS and CORP restrictions.
+Welcome to the **Comix API**! This is a lightning-fast, Next.js based REST API that acts as a wrapper and proxy for the `comix.to` manga platform.
 
-## Content Filtering
-Collection endpoints like `home`, `search`, `filter`, and `browse` optionally accept an `sfw=true` query parameter.
-When passed, the API mimics the website's default Content Preference behavior by filtering out comics tagged as `is_nsfw` or containing mature genres (Hentai, Erotica, Smut, Pornographic).
-
-## Endpoints
-
-### 1. `GET /api/manga/home`
-Fetches the popular and latest updated mangas from the comix.to home page.
-- **Query Parameters**:
-  - `sfw` (optional): Set to `true` to filter out NSFW content.
-- **Returns**: `{ popular: ComicItem[], latest: ComicItem[] }`
-- **ComicItem**:
-  ```typescript
-  {
-    title: string;
-    link: string;
-    img: string; // Proxied image URL
-    chapter: string;
-    genres: string[];
-    id: string; // The manga ID, e.g. "hash-slug"
-  }
-  ```
-
-### 2. `GET /api/manga/search`
-Searches for mangas based on a keyword.
-- **Query Parameters**:
-  - `q` (required): The search keyword.
-  - `sfw` (optional): Set to `true` to filter out NSFW content.
-  - Optional pagination/filtering params identical to comix.to, such as `page`, `limit`.
-- **Returns**: `{ results: SearchItem[], pagination: PaginationInfo }`
-- **SearchItem**:
-  ```typescript
-  {
-    id: string;
-    slug: string;
-    title: string;
-    alt_titles: string[];
-    link: string;
-    img: string | null; // Proxied image URL
-    chapter: string;
-    genres: string[];
-    synopsis: string;
-    status: number;
-    score: number;
-    year: number;
-    type: string;
-  }
-  ```
-
-### 3. `GET /api/manga/:id`
-Fetches detailed info about a specific comic.
-- **Path Parameters**:
-  - `id` (required): The manga ID (format: `hash-slug`).
-- **Returns**: `{ comic: ComicDetail }`
-- **ComicDetail**:
-  ```typescript
-  {
-    id: string;
-    slug: string;
-    title: string;
-    altTitles: string[];
-    cover: string | null; // Proxied image URL
-    format: string;
-    status: number;
-    author: string;
-    artist: string;
-    genres: string[];
-    synopsis: string;
-    latest_chapter: string;
-    score: number;
-    year: number;
-  }
-  ```
-
-### 4. `GET /api/manga/read`
-Fetches the images for a specific chapter viewing.
-- **Query Parameters**:
-  - `chapterId` (required): The ID of the chapter.
-- **Returns**:
-  ```typescript
-  {
-    chapterId: string;
-    images: { url: string; width: number; height: number; }[]; // URLs are Proxied
-    total_images: number;
-  }
-  ```
-
-### 5. `GET /api/manga/filter`
-Filters mangas based on genres and other parameters.
-- **Query Parameters**:
-  - `genres`: A comma separated list of genres, e.g., `action,adventure`.
-  - `sfw` (optional): Set to `true` to filter out NSFW content.
-  - `status`, `type`, `sort`, `page`, `limit`.
-- **Returns**: Identical structure to `/api/manga/search` (`results`, `pagination`).
-
-### 6. `GET /api/manga/browse`
-Browses mangas. Automatically applies a `sort=newest` default if not provided.
-- **Query Parameters**:
-  - `sfw` (optional): Set to `true` to filter out NSFW content.
-  - `sort`, `type`, `limit`, etc.
-- **Returns**: Identical structure to `/api/manga/search` (`results`, `pagination`).
+Whether you're building a manga reader app, a Discord bot, or a personal reading dashboard, this API gives you structured JSON data for searching, browsing, and reading manga—without any of the CORS headaches!
 
 ---
 
-## Image Proxy
-- `GET /api/image?url=<original_image_url>`
-- Used internally by endpoints to bypass CORS returning images securely. You generally don't need to call this manually unless requested explicitly.
+## 🌟 Features
+
+- **Bypass CORS & CORP**: All manga pages and cover images are automatically proxied through the API so you can render them directly in `<img>` tags without strict browser blocks.
+- **SFW Content Filter**: Easily filter out mature / NSFW content (Hentai, Erotica, Smut) with a single query parameter (`?sfw=true`).
+- **Complete Feature Parity**: Native support for all advanced filtering, searching, and sorting options found on the main source.
+
+---
+
+## 🚀 Quick Start
+
+Assuming you are running the API locally at `http://localhost:3000`.
+
+**Fetch the most popular manga right now:**
+```bash
+curl "http://localhost:3000/api/manga/home"
+```
+
+**Search for a specific manga (e.g., "Solo Leveling"):**
+```bash
+curl "http://localhost:3000/api/manga/search?q=solo"
+```
+
+---
+
+## 🛡️ SFW / Content Filtering
+
+The `comix.to` platform includes both safe and mature content. By default, this API returns **All Content**.
+
+If you are building an app where you want to hide NSFW results (e.g., Apple App Store guidelines or personal preference), simply append `&sfw=true` to any listing endpoint.
+
+**Example: Search safe content only**
+```bash
+curl "http://localhost:3000/api/manga/search?q=elf&sfw=true"
+```
+*Supported on: `/home`, `/search`, `/filter`, and `/browse`.*
+
+---
+
+## 📚 API Endpoints Reference
+
+### 1. Home (`/api/manga/home`)
+Fetches the "Most Recent Popular" and "Latest Updates" from the homepage.
+- **Method:** `GET`
+- **Parameters:**
+  - `sfw` *(boolean, optional)*: Set to `true` to filter out NSFW content.
+- **Example Request:** `GET /api/manga/home?sfw=true`
+- **Example Response:**
+  ```json
+  {
+    "popular": [
+      {
+        "title": "The Chick-Class Hunter is Filial!",
+        "img": "/api/image?url=https://...",
+        "chapter": "Ch.58",
+        "genres": ["2 days ago"],
+        "id": "n8we-the-chick-class-hunter-is-filial"
+      }
+    ],
+    "latest": [ ... ]
+  }
+  ```
+
+### 2. Search (`/api/manga/search`)
+Searches for mangas based on a keyword. You can also pass advanced filters!
+- **Method:** `GET`
+- **Parameters:**
+  - `q` *(string, required)*: The search query.
+  - `sfw` *(boolean, optional)*: Filter out NSFW content.
+  - `types[]`, `status`, `genres[]`, `page`, `limit` *(optional)*: Advanced filters.
+- **Example Request:** `GET /api/manga/search?q=demon&types[]=manhwa&status=releasing`
+- **Example Response:**
+  ```json
+  {
+    "results": [
+      {
+        "id": "abc-demon-slayer",
+        "title": "Demon Slayer",
+        "img": "/api/image?url=...",
+        "status": 1,
+        "score": 9.5,
+        "type": "manga"
+      }
+    ],
+    "pagination": { "current_page": 1, "last_page": 5 }
+  }
+  ```
+
+### 3. Comic Details (`/api/manga/:id`)
+Gets the full descriptive metadata for a specific manga.
+- **Method:** `GET`
+- **Path Parameter:**
+  - `id` *(string, required)*: The manga ID slug (e.g., `n8we-the-chick-class-hunter`).
+- **Example Request:** `GET /api/manga/n8we-the-chick-class-hunter`
+- **Example Response:**
+  ```json
+  {
+    "comic": {
+      "id": "n8we-the-chick-class-hunter",
+      "title": "The Chick-Class Hunter",
+      "cover": "/api/image?url=...",
+      "author": "John Doe",
+      "synopsis": "A great story...",
+      "genres": ["Action", "Fantasy"]
+    }
+  }
+  ```
+
+### 4. Chapter List (`/api/manga/chapter`)
+Fetches the list of all uploaded chapters for a specific comic.
+- **Method:** `GET`
+- **Parameters:**
+  - `comicId` *(string, required)*: The ID of the manga.
+- **Example Request:** `GET /api/manga/chapter?comicId=n8we-the-chick-class-hunter`
+
+### 5. Read Chapter Images (`/api/manga/read`)
+Fetches the actual CDN comic pages/images to render a chapter. All image URLs returned here are already wrapped in the local proxy, meaning you can plug them directly into `<img src="...">` safely!
+- **Method:** `GET`
+- **Parameters:**
+  - `chapterId` *(string, required)*: The specific ID of the chapter (obtained from the Chapter List endpoint).
+- **Example Request:** `GET /api/manga/read?chapterId=8295088`
+- **Example Response:**
+  ```json
+  {
+    "chapterId": "8295088",
+    "total_images": 20,
+    "images": [
+      {
+        "url": "/api/image?url=https://cdn...",
+        "width": 800,
+        "height": 1200
+      }
+    ]
+  }
+  ```
+
+### 6. Filter & Browse (`/api/manga/filter` & `/api/manga/browse`)
+Used for querying the database without a specific search term. 
+- `/browse` sorts by `newest` by default.
+- `/filter` requires specific filters like `?genres=action,adventure`.
+- Both support the `?sfw=true` parameter.
+
+---
+
+## 🖼️ The Image Proxy System
+
+You might notice that all images returned by this API start with `/api/image?url=...` instead of the direct `https://static.comix.to/...` url.
+
+**Why?**
+Browsers block images loaded from external CDNs if they contain `Cross-Origin-Resource-Policy` or strict `Referer` checks. If you tried to load their images directly on your website, they would return `403 Forbidden`.
+
+To fix this, this API includes an internal image proxy (`src/app/api/image/route.ts`). It fetches the image serverside and pipes it directly to your frontend with permissive CORS headers. **You do not need to do anything—it simply works out of the box.**
