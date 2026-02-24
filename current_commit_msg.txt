@@ -1,2 +1,0 @@
-fix(home): Correctly parse proxy response as text instead of JSON
-
