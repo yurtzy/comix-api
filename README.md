@@ -1,20 +1,20 @@
-# Comix API 🚀
+# Comix API
 
-Welcome to the **Comix API**! This is a lightning-fast, Next.js based REST API that acts as a wrapper and proxy for the `comix.to` manga platform.
+Welcome to the Comix API. This is a Next.js based REST API that acts as a wrapper and proxy for the comix.to manga platform.
 
-Whether you're building a manga reader app, a Discord bot, or a personal reading dashboard, this API gives you structured JSON data for searching, browsing, and reading manga—without any of the CORS headaches!
+Whether you're building a manga reader app, a Discord bot, or a personal reading dashboard, this API gives you structured JSON data for searching, browsing, and reading manga, bypassing CORS restrictions.
 
 ---
 
-## 🌟 Features
+## Features
 
 - **Bypass CORS & CORP**: All manga pages and cover images are automatically proxied through the API so you can render them directly in `<img>` tags without strict browser blocks.
-- **SFW Content Filter**: Easily filter out mature / NSFW content (Hentai, Erotica, Smut) with a single query parameter (`?sfw=true`).
+- **SFW Content Filter**: Filter out mature/NSFW content (Hentai, Erotica, Smut) with a single query parameter (`?sfw=true`).
 - **Complete Feature Parity**: Native support for all advanced filtering, searching, and sorting options found on the main source.
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 Assuming you are running the API locally at `http://localhost:3000`.
 
@@ -30,11 +30,11 @@ curl "http://localhost:3000/api/manga/search?q=solo"
 
 ---
 
-## 🛡️ SFW / Content Filtering
+## SFW / Content Filtering
 
-The `comix.to` platform includes both safe and mature content. By default, this API returns **All Content**.
+The comix.to platform includes both safe and mature content. By default, this API returns All Content.
 
-If you are building an app where you want to hide NSFW results (e.g., Apple App Store guidelines or personal preference), simply append `&sfw=true` to any listing endpoint.
+If you are building an app where you want to hide NSFW results, append `&sfw=true` to any listing endpoint.
 
 **Example: Search safe content only**
 ```bash
@@ -44,7 +44,7 @@ curl "http://localhost:3000/api/manga/search?q=elf&sfw=true"
 
 ---
 
-## 📚 API Endpoints Reference
+## API Endpoints Reference
 
 ### 1. Home (`/api/manga/home`)
 Fetches the "Most Recent Popular" and "Latest Updates" from the homepage.
@@ -69,7 +69,7 @@ Fetches the "Most Recent Popular" and "Latest Updates" from the homepage.
   ```
 
 ### 2. Search (`/api/manga/search`)
-Searches for mangas based on a keyword. You can also pass advanced filters!
+Searches for mangas based on a keyword. You can also pass advanced filters.
 - **Method:** `GET`
 - **Parameters:**
   - `q` *(string, required)*: The search query.
@@ -121,7 +121,7 @@ Fetches the list of all uploaded chapters for a specific comic.
 - **Example Request:** `GET /api/manga/chapter?comicId=n8we-the-chick-class-hunter`
 
 ### 5. Read Chapter Images (`/api/manga/read`)
-Fetches the actual CDN comic pages/images to render a chapter. All image URLs returned here are already wrapped in the local proxy, meaning you can plug them directly into `<img src="...">` safely!
+Fetches the actual CDN comic pages/images to render a chapter. All image URLs returned here are already wrapped in the local proxy, meaning you can plug them directly into `<img src="...">` safely.
 - **Method:** `GET`
 - **Parameters:**
   - `chapterId` *(string, required)*: The specific ID of the chapter (obtained from the Chapter List endpoint).
@@ -149,11 +149,10 @@ Used for querying the database without a specific search term.
 
 ---
 
-## 🖼️ The Image Proxy System
+## The Image Proxy System
 
 You might notice that all images returned by this API start with `/api/image?url=...` instead of the direct `https://static.comix.to/...` url.
 
-**Why?**
 Browsers block images loaded from external CDNs if they contain `Cross-Origin-Resource-Policy` or strict `Referer` checks. If you tried to load their images directly on your website, they would return `403 Forbidden`.
 
-To fix this, this API includes an internal image proxy (`src/app/api/image/route.ts`). It fetches the image serverside and pipes it directly to your frontend with permissive CORS headers. **You do not need to do anything—it simply works out of the box.**
+To fix this, this API includes an internal image proxy (`src/app/api/image/route.ts`). It fetches the image serverside and pipes it directly to your frontend with permissive CORS headers. You do not need to do anything, it simply works out of the box.
