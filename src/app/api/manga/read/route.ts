@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
     const targetUrl = `https://comix.to/api/v2/chapters/${chapterId}`;
     const proxyUrl = `https://script.google.com/macros/s/AKfycbwp4VIpqcx-Dq06Ig7EKCjVqLy5WFDEdmqJTEyE-JwhJQywenfjhb-M1wL4R-i76vij/exec?url=${encodeURIComponent(targetUrl)}`;
     const res = await fetch(proxyUrl, {
-      next: { revalidate: 3600 }
+      next: { revalidate: 3600 },
+      redirect: 'follow'
     });
     
     if (!res.ok) {
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest) {
     }
 
     const images = item.images.map((img: any) => ({
-      url: img.url,
+      url: `/api/image?url=${encodeURIComponent(img.url)}`,
       width: img.width,
       height: img.height
     }));

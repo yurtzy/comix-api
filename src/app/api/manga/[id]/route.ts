@@ -1,13 +1,15 @@
 import { NextRequest } from 'next/server';
 
 
-export async function GET(request: NextRequest) {
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    const { id } = await params;
     
     if (!id) {
-      return Response.json({ error: 'Missing query parameter "id"' }, { status: 400 });
+      return Response.json({ error: 'Missing path parameter "id"' }, { status: 400 });
     }
 
     const hashId = id.split('-')[0];
@@ -34,7 +36,7 @@ export async function GET(request: NextRequest) {
       slug: item.slug,
       title: item.title,
       altTitles: item.alt_titles,
-      cover: item.poster?.large || item.poster?.medium,
+      cover: (item.poster?.large || item.poster?.medium) ? `/api/image?url=${encodeURIComponent(item.poster?.large || item.poster?.medium)}` : null,
       format: item.type || 'manga',
       status: item.status,
       author: item.authors?.map((a: any) => a.title).join(', ') || 'Unknown',

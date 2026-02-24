@@ -1,65 +1,111 @@
 # Comix API
 
-A blazing-fast, serverless JSON API for proxying manga and comic data from Comix.to. Built with Next.js, optimized for Vercel, and engineered to reliably bypass strict Cloudflare Datacenter IP blocks using a custom Google Apps Script proxy.
+A Next.js based API wrapper that proxies and standardizes responses from comix.to. All image URLs returned by the API are automatically prefixed with a local `/api/image` proxy route to bypass client-side CORS and CORP restrictions.
 
-## 🚀 Features
+## Content Filtering
+Collection endpoints like `home`, `search`, `filter`, and `browse` optionally accept an `sfw=true` query parameter.
+When passed, the API mimics the website's default Content Preference behavior by filtering out comics tagged as `is_nsfw` or containing mature genres (Hentai, Erotica, Smut, Pornographic).
 
-- **Blazing Fast:** Leverages Next.js serverless functions and aggressive CDN caching (`Next.js fetch cache` + Vercel Edge Network) for lightning-fast response times.
-- **Direct JSON Proxy:** Instead of slow/brittle HTML scraping, this API directly consumes Comix.to's hidden internal v2 JSON APIs for superior performance and data consistency.
-- **Cloudflare WAF Bypass:** Includes an ingenious architecture that routes Vercel requests through a Google Apps Script proxy. Because Google's ASNs have high trust scores, it completely bypasses Cloudflare's strict Datacenter IP bans and JavaScript challenges without requiring a paid residential proxy pool.
+## Endpoints
 
-## 📡 API Endpoints
+### 1. `GET /api/manga/home`
+Fetches the popular and latest updated mangas from the comix.to home page.
+- **Query Parameters**:
+  - `sfw` (optional): Set to `true` to filter out NSFW content.
+- **Returns**: `{ popular: ComicItem[], latest: ComicItem[] }`
+- **ComicItem**:
+  ```typescript
+  {
+    title: string;
+    link: string;
+    img: string; // Proxied image URL
+    chapter: string;
+    genres: string[];
+    id: string; // The manga ID, e.g. "hash-slug"
+  }
+  ```
 
-All endpoints are completely open and return structured JSON. 
+### 2. `GET /api/manga/search`
+Searches for mangas based on a keyword.
+- **Query Parameters**:
+  - `q` (required): The search keyword.
+  - `sfw` (optional): Set to `true` to filter out NSFW content.
+  - Optional pagination/filtering params identical to comix.to, such as `page`, `limit`.
+- **Returns**: `{ results: SearchItem[], pagination: PaginationInfo }`
+- **SearchItem**:
+  ```typescript
+  {
+    id: string;
+    slug: string;
+    title: string;
+    alt_titles: string[];
+    link: string;
+    img: string | null; // Proxied image URL
+    chapter: string;
+    genres: string[];
+    synopsis: string;
+    status: number;
+    score: number;
+    year: number;
+    type: string;
+  }
+  ```
 
-### 1. Search / Discover Manga
-`GET /api/search?q={keyword}`
+### 3. `GET /api/manga/:id`
+Fetches detailed info about a specific comic.
+- **Path Parameters**:
+  - `id` (required): The manga ID (format: `hash-slug`).
+- **Returns**: `{ comic: ComicDetail }`
+- **ComicDetail**:
+  ```typescript
+  {
+    id: string;
+    slug: string;
+    title: string;
+    altTitles: string[];
+    cover: string | null; // Proxied image URL
+    format: string;
+    status: number;
+    author: string;
+    artist: string;
+    genres: string[];
+    synopsis: string;
+    latest_chapter: string;
+    score: number;
+    year: number;
+  }
+  ```
 
-Proxies the advanced search engine. Also supports all internal filtering parameters.
+### 4. `GET /api/manga/read`
+Fetches the images for a specific chapter viewing.
+- **Query Parameters**:
+  - `chapterId` (required): The ID of the chapter.
+- **Returns**:
+  ```typescript
+  {
+    chapterId: string;
+    images: { url: string; width: number; height: number; }[]; // URLs are Proxied
+    total_images: number;
+  }
+  ```
 
-**Example Request:**
-`/api/search?q=solo&limit=10&page=1`
+### 5. `GET /api/manga/filter`
+Filters mangas based on genres and other parameters.
+- **Query Parameters**:
+  - `genres`: A comma separated list of genres, e.g., `action,adventure`.
+  - `sfw` (optional): Set to `true` to filter out NSFW content.
+  - `status`, `type`, `sort`, `page`, `limit`.
+- **Returns**: Identical structure to `/api/manga/search` (`results`, `pagination`).
 
-### 2. Comic Details (Metadata)
-`GET /api/comic?id={comicId}`
-
-Returns rich metadata about a specific manga by ID.
-
-**Example Request:**
-`/api/comic?id=8259-solo-leveling`
-
-### 3. Chapter List (Pagination)
-`GET /api/chapter?comicId={comicId}`
-
-Retrieves the paginated list of chapters for a given manga.
-
-**Example Request:**
-`/api/chapter?comicId=8259-solo-leveling&page=1`
-
-### 4. Read Chapter (Images)
-`GET /api/read?chapterId={chapterId}`
-
-Fetches the actual image URLs, dimensions, and total page count for reading a specific chapter.
-
-**Example Request:**
-`/api/read?chapterId=8295088`
-
-## 🛠️ Tech Stack & Architecture
-- **Framework:** Next.js (App Router API Routes)
-- **Deployment:** Vercel (AWS Serverless Node.js Environment)
-- **Proxy Layer:** Google Apps Script (`UrlFetchApp`)
-
-## 💡 How the Cloudflare Bypass Works (Developer Notes)
-If deployed natively to Vercel, AWS, or DigitalOcean, Comix.to's Cloudflare "Bot Fight Mode" will instantly return a `403 Forbidden` or a JavaScript Challenge page, blocking your API.
-
-To fix this, this repository proxies the requests through Google Apps Script:
-1. `api/search` on Vercel sends a fetch request to a private `script.google.com` Web App URL.
-2. The Google script (running on highly-trusted Google IPs) fetches the internal Comix.to API with standard browser headers.
-3. Google returns the raw JSON to Vercel.
-4. Vercel maps and caches the result for users!
-
-## 📜 Disclaimer
-This project is an unofficial proxy and is not affiliated with or endorsed by Comix.to. It was built for educational purposes to demonstrate modern API development, reverse engineering, and resilient proxying architectures.
+### 6. `GET /api/manga/browse`
+Browses mangas. Automatically applies a `sort=newest` default if not provided.
+- **Query Parameters**:
+  - `sfw` (optional): Set to `true` to filter out NSFW content.
+  - `sort`, `type`, `limit`, etc.
+- **Returns**: Identical structure to `/api/manga/search` (`results`, `pagination`).
 
 ---
-*Developed by Yurtzy*
+
+## Image Proxy
+- `GET /api/image?url=<original_image_url>`
+- Used internally by endpoints to bypass CORS returning images securely. You generally don't need to call this manually unless requested explicitly.

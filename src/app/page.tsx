@@ -26,22 +26,22 @@ export default function Home() {
         <div style={{ backgroundColor: '#1f2937', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
           <h3 style={{ margin: '0 0 1rem 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ backgroundColor: '#3b82f6', color: '#fff', padding: '4px 8px', borderRadius: '6px', fontSize: '0.875rem' }}>GET</span>
-            /api/home
+            /api/manga/home
           </h3>
-          <p style={{ color: '#9ca3af', marginBottom: '1rem', marginTop: 0 }}>Fetches the "Most Recent Popular" and "Latest Updates" from the homepage.</p>
-          <a href="/api/home" target="_blank" style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: '500' }}>→ Test /api/home</a>
+          <p style={{ color: '#9ca3af', marginBottom: '1rem', marginTop: 0 }}>Fetches the "Most Recent Popular" and "Latest Updates" from the homepage. Supports `?sfw=true` parameter.</p>
+          <a href="/api/manga/home" target="_blank" style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: '500' }}>→ Test /api/manga/home</a>
         </div>
 
         {/* Endpoint 2 */}
         <div style={{ backgroundColor: '#1f2937', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
           <h3 style={{ margin: '0 0 1rem 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ backgroundColor: '#3b82f6', color: '#fff', padding: '4px 8px', borderRadius: '6px', fontSize: '0.875rem' }}>GET</span>
-            /api/search
+            /api/manga/search
           </h3>
-          <p style={{ color: '#9ca3af', marginBottom: '1rem', marginTop: 0 }}>Searches the database. Because we proxy the internal API, all their source filters (genres, types, status) work automatically! Just pass them as query parameters.</p>
+          <p style={{ color: '#9ca3af', marginBottom: '1rem', marginTop: 0 }}>Searches the database. Because we proxy the internal API, all their source filters (genres, types, status) work automatically! Just pass them as query parameters. Supports `?sfw=true` parameter.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <a href="/api/search?q=solo" target="_blank" style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: '500' }}>→ Test Basic Search (?q=solo)</a>
-            <a href="/api/search?q=solo&types[]=manhwa&status=releasing" target="_blank" style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: '500' }}>→ Test Advanced Filters (Manhwa + Releasing)</a>
+            <a href="/api/manga/search?q=solo" target="_blank" style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: '500' }}>→ Test Basic Search (?q=solo)</a>
+            <a href="/api/manga/search?q=solo&types[]=manhwa&status=releasing" target="_blank" style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: '500' }}>→ Test Advanced Filters (Manhwa + Releasing)</a>
           </div>
         </div>
 
@@ -49,30 +49,20 @@ export default function Home() {
         <div style={{ backgroundColor: '#1f2937', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
           <h3 style={{ margin: '0 0 1rem 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ backgroundColor: '#3b82f6', color: '#fff', padding: '4px 8px', borderRadius: '6px', fontSize: '0.875rem' }}>GET</span>
-            /api/comic
+            /api/manga/:id
           </h3>
           <p style={{ color: '#9ca3af', marginBottom: '1rem', marginTop: 0 }}>Gets complete metadata for a specific comic, including synopsis, status, and authors.</p>
-          <a href="/api/comic?id=n8we-the-chick-class-hunter-is-filial" target="_blank" style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: '500' }}>→ Test Comic Details</a>
+          <a href="/api/manga/n8we-the-chick-class-hunter-is-filial" target="_blank" style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: '500' }}>→ Test Comic Details</a>
         </div>
 
         {/* Endpoint 4 */}
         <div style={{ backgroundColor: '#1f2937', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
           <h3 style={{ margin: '0 0 1rem 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{ backgroundColor: '#3b82f6', color: '#fff', padding: '4px 8px', borderRadius: '6px', fontSize: '0.875rem' }}>GET</span>
-            /api/chapter
-          </h3>
-          <p style={{ color: '#9ca3af', marginBottom: '1rem', marginTop: 0 }}>Gets the paginated list of chapters for a comic.</p>
-          <a href="/api/chapter?comicId=n8we-the-chick-class-hunter-is-filial" target="_blank" style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: '500' }}>→ Test Chapter List</a>
-        </div>
-
-        {/* Endpoint 5 */}
-        <div style={{ backgroundColor: '#1f2937', padding: '1.5rem', borderRadius: '12px', border: '1px solid #374151' }}>
-          <h3 style={{ margin: '0 0 1rem 0', color: '#fff', display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span style={{ backgroundColor: '#3b82f6', color: '#fff', padding: '4px 8px', borderRadius: '6px', fontSize: '0.875rem' }}>GET</span>
-            /api/read
+            /api/manga/read
           </h3>
           <p style={{ color: '#9ca3af', marginBottom: '1rem', marginTop: 0 }}>Gets the original CDN image URLs for reading a specific chapter.</p>
-          <a href="/api/read?chapterId=8295088" target="_blank" style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: '500' }}>→ Test Chapter Images</a>
+          <a href="/api/manga/read?chapterId=8295088" target="_blank" style={{ color: '#60a5fa', textDecoration: 'none', fontWeight: '500' }}>→ Test Chapter Images</a>
         </div>
 
       </div>
