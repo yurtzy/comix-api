@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
+import { getProxyUrl } from '@/lib/proxy';
 
 export async function GET(request: NextRequest) {
   try {
     const targetUrl = 'https://comix.to/home';
-    const proxyUrl = `https://script.google.com/macros/s/AKfycbwp4VIpqcx-Dq06Ig7EKCjVqLy5WFDEdmqJTEyE-JwhJQywenfjhb-M1wL4R-i76vij/exec?url=${encodeURIComponent(targetUrl)}`;
+    const proxyUrl = getProxyUrl(targetUrl);
     const res = await fetch(proxyUrl, {
       next: { revalidate: 3600 }
     });

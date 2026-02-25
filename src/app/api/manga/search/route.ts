@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-
+import { getProxyUrl } from '@/lib/proxy';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const proxyUrl = `https://script.google.com/macros/s/AKfycbwp4VIpqcx-Dq06Ig7EKCjVqLy5WFDEdmqJTEyE-JwhJQywenfjhb-M1wL4R-i76vij/exec?url=${encodeURIComponent(apiUrl.toString())}`;
+    const proxyUrl = getProxyUrl(apiUrl.toString());
     const res = await fetch(proxyUrl, {
       next: { revalidate: 3600 }
     });
