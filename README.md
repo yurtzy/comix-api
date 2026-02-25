@@ -98,7 +98,9 @@ Gets the full descriptive metadata for a specific manga.
 - **Method:** `GET`
 - **Path Parameter:**
   - `id` *(string, required)*: The manga ID slug (e.g., `n8we-the-chick-class-hunter`).
-- **Example Request:** `GET /api/manga/n8we-the-chick-class-hunter`
+- **Parameters:**
+  - `sfw` *(boolean, optional)*: Set to `true` to return 404 if the comic contains NSFW content.
+- **Example Request:** `GET /api/manga/n8we-the-chick-class-hunter?sfw=true`
 - **Example Response:**
   ```json
   {
@@ -106,25 +108,32 @@ Gets the full descriptive metadata for a specific manga.
       "id": "n8we-the-chick-class-hunter",
       "title": "The Chick-Class Hunter",
       "cover": "/api/image?url=...",
-      "author": "John Doe",
+      "demographics": "Shounen",
+      "authors": "John Doe",
+      "artists": "Jane Smith",
       "synopsis": "A great story...",
-      "genres": ["Action", "Fantasy"]
+      "genres": ["Action", "Fantasy"],
+      "scanlation_groups": [
+        { "scanlation_group_id": 123, "name": "ScanGroup" }
+      ]
     }
   }
   ```
 
-### 4. Chapter List (`/api/manga/chapter`)
-Fetches the list of all uploaded chapters for a specific comic.
+### 4. Paginated Chapters (`/api/manga/:id/chapters`)
+Fetches the paginated list of chapters for a specific comic, including the scanlation group assigned to each chapter.
 - **Method:** `GET`
+- **Path Parameter:**
+  - `id` *(string, required)*: The manga ID slug.
 - **Parameters:**
-  - `comicId` *(string, required)*: The ID of the manga.
-- **Example Request:** `GET /api/manga/chapter?comicId=n8we-the-chick-class-hunter`
+  - `page`, `limit`, `scanlation_group_id` *(optional)*: Advanced filter options matching comix paginated chapters.
+- **Example Request:** `GET /api/manga/n8we-the-chick-class-hunter/chapters?page=1&limit=30`
 
 ### 5. Read Chapter Images (`/api/manga/read`)
 Fetches the actual CDN comic pages/images to render a chapter. All image URLs returned here are already wrapped in the local proxy, meaning you can plug them directly into `<img src="...">` safely.
 - **Method:** `GET`
 - **Parameters:**
-  - `chapterId` *(string, required)*: The specific ID of the chapter (obtained from the Chapter List endpoint).
+  - `chapterId` *(string, required)*: The specific ID of the chapter.
 - **Example Request:** `GET /api/manga/read?chapterId=8295088`
 - **Example Response:**
   ```json
