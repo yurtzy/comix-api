@@ -14,10 +14,13 @@ export async function GET(request: NextRequest) {
     const apiUrl = new URL('https://comix.to/api/v2/manga');
     apiUrl.searchParams.set('keyword', q);
 
-    // Forward applicable search filters like limit, page, order
+    // Forward applicable search filters like limit, page, order, genres
     for (const [key, value] of searchParams.entries()) {
-      if (key !== 'q') {
-        apiUrl.searchParams.set(key, value);
+      if (key === 'genres' || key === 'excludes') {
+        const list = value.split(',');
+        list.forEach(item => apiUrl.searchParams.append(`${key}[]`, item.trim()));
+      } else if (key !== 'q') {
+        apiUrl.searchParams.append(key, value);
       }
     }
 
