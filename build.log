@@ -1,0 +1,29 @@
+鈻?Next.js 16.1.6 (Turbopack)
+
+  Creating an optimized production build ...
+鉁?Compiled successfully in 10.0s
+  Running TypeScript ...
+  Collecting page data using 7 workers ...
+  Generating static pages using 7 workers (0/10) ...
+  Generating static pages using 7 workers (2/10) 
+  Generating static pages using 7 workers (4/10) 
+  Generating static pages using 7 workers (7/10) 
+鉁?Generating static pages using 7 workers (10/10) in 756.9ms
+  Finalizing page optimization ...
+
+Route (app)
+鈹?鈼?/
+鈹?鈼?/_not-found
+鈹?茠 /api/image
+鈹?茠 /api/manga/[id]
+鈹?茠 /api/manga/[id]/chapters
+鈹?茠 /api/manga/browse
+鈹?茠 /api/manga/filter
+鈹?茠 /api/manga/home
+鈹?茠 /api/manga/read
+鈹?茠 /api/manga/search
+
+
+鈼? (Static)   prerendered as static content
+茠  (Dynamic)  server-rendered on demand
+

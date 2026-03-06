@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
           const title = $(el).find('.title').text().trim();
           const link = $(el).find('a.poster').attr('href');
           const rawImg = $(el).find('img').attr('src');
-          const img = rawImg ? `/api/image?url=${encodeURIComponent(rawImg)}` : null;
+          const img = rawImg || null;
           
           const metadataSpans = $(el).find('.metadata span');
           const chapter = metadataSpans.first().text().trim();
@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
           const title = $(el).find('.title').text().trim();
           const link = $(el).find('a.poster').attr('href');
           const rawImg = $(el).find('img').attr('src');
-          const img = rawImg ? `/api/image?url=${encodeURIComponent(rawImg)}` : null;
+          const img = rawImg || null;
           
           const metadataSpans = $(el).find('.metadata span');
           const chapter = metadataSpans.first().text().trim();

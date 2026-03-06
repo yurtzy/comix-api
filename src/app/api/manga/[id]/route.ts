@@ -137,7 +137,7 @@ export async function GET(
       slug: item.slug,
       title: item.title,
       altTitles: item.alt_titles,
-      cover: (item.poster?.large || item.poster?.medium) ? `/api/image?url=${encodeURIComponent(item.poster?.large || item.poster?.medium)}` : null,
+      cover: (item.poster?.large || item.poster?.medium) || null,
       
       score: item.rated_avg,
       scoreUsers: item.rated_count,

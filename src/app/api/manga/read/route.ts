@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     }
 
     const images = item.images.map((img: any) => ({
-      url: `/api/image?url=${encodeURIComponent(img.url)}`,
+      url: img.url,
       width: img.width,
       height: img.height
     }));

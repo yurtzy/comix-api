@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       title: item.title,
       alt_titles: item.alt_titles,
       link: `/title/${item.hash_id}-${item.slug}`,
-      img: (item.poster?.large || item.poster?.medium) ? `/api/image?url=${encodeURIComponent(item.poster?.large || item.poster?.medium)}` : null,
+      img: (item.poster?.large || item.poster?.medium) || null,
       chapter: item.latest_chapter ? `Ch.${item.latest_chapter}` : 'N/A',
       genres: item.genres?.map((g: any) => g.title) || [],
       synopsis: item.synopsis,
