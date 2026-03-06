@@ -41,3 +41,8 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+# Temporary files
+*.log
+response*.json
+test*.json
