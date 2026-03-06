@@ -19,10 +19,12 @@ Whether you're building a manga reader app, a Discord bot, or a personal reading
 Assuming you are running the API locally at `http://localhost:3000`.
 
 **Fetch the most popular manga right now:**
+**Fetch the most popular manga right now:**
 ```bash
 curl "http://localhost:3000/api/manga/home"
 ```
 
+**Search for a specific manga (e.g., "Solo Leveling"):**
 **Search for a specific manga (e.g., "Solo Leveling"):**
 ```bash
 curl "http://localhost:3000/api/manga/search?q=solo"
@@ -152,8 +154,8 @@ Fetches the actual CDN comic pages/images to render a chapter. All image URLs re
 
 ### 6. Filter & Browse (`/api/manga/filter` & `/api/manga/browse`)
 Used for querying the database without a specific search term. 
-- `/browse` sorts by `newest` by default.
-- `/filter` requires specific filters like `?genres=action,adventure`.
+- `/api/manga/browse` sorts by `newest` by default.
+- `/api/manga/filter` requires specific filters like `?genres=action,adventure`.
 - Both support the `?sfw=true` parameter.
 
 ---
