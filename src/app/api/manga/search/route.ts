@@ -1,13 +1,26 @@
 import { NextRequest } from 'next/server';
 import { getProxyUrl } from '@/lib/proxy';
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: corsHeaders
+  });
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const q = searchParams.get('q');
     
     if (!q) {
-      return Response.json({ error: 'Missing query parameter "q"' }, { status: 400 });
+      return Response.json({ error: 'Missing query parameter "q"' }, { status: 400, headers: corsHeaders });
     }
 
     // Proxy the internal JSON API of comix.to
@@ -30,7 +43,7 @@ export async function GET(request: NextRequest) {
     });
     
     if (!res.ok) {
-      return Response.json({ error: 'Failed to fetch search results' }, { status: res.status });
+      return Response.json({ error: 'Failed to fetch search results' }, { status: res.status, headers: corsHeaders });
     }
 
     const data = await res.json();
@@ -66,9 +79,12 @@ export async function GET(request: NextRequest) {
       type: item.type
     }));
 
-    return Response.json({ results, pagination: data.result?.pagination });
+    return Response.json(
+      { results, pagination: data.result?.pagination },
+      { headers: corsHeaders }
+    );
   } catch (error) {
     console.error(error);
-    return Response.json({ error: 'Internal Server Error' }, { status: 500 });
+    return Response.json({ error: 'Internal Server Error' }, { status: 500, headers: corsHeaders });
   }
 }
