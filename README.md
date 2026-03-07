@@ -60,7 +60,7 @@ Fetches the "Most Recent Popular" and "Latest Updates" from the homepage.
     "popular": [
       {
         "title": "The Chick-Class Hunter is Filial!",
-        "img": "/api/image?url=https://...",
+        "cover": "/api/image?url=https://...",
         "chapter": "Ch.58",
         "genres": ["2 days ago"],
         "id": "n8we-the-chick-class-hunter-is-filial"
