@@ -1,20 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as cheerio from 'cheerio';
-import { getProxyUrl } from '@/lib/proxy';
+import { fetchDirect, isCloudflareChallenge } from '@/lib/proxy';
 
 export async function GET(request: NextRequest) {
   try {
     const targetUrl = 'https://comix.to/home';
-    const proxyUrl = getProxyUrl(targetUrl);
-    const res = await fetch(proxyUrl, {
-      next: { revalidate: 3600 }
-    });
+    const res = await fetchDirect(targetUrl, { isHtml: true, revalidate: 3600 });
     
     if (!res.ok) {
       return NextResponse.json({ error: 'Failed to fetch source' }, { status: res.status });
     }
 
     const html = await res.text();
+
+    if (isCloudflareChallenge(html)) {
+      console.error('[home] Cloudflare is blocking the request — try setting PROXY_URL env var to a CF-bypass proxy');
+      return NextResponse.json({ error: 'Source blocked by Cloudflare bot protection.' }, { status: 503 });
+    }
+
     const $ = cheerio.load(html);
 
     const popular: any[] = [];

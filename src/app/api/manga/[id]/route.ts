@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import * as cheerio from 'cheerio';
-import { getProxyUrl } from '@/lib/proxy';
+import { fetchDirect } from '@/lib/proxy';
 
 export async function GET(
   request: NextRequest,
@@ -19,8 +19,8 @@ export async function GET(
     const htmlUrl = `https://comix.to/title/${id}`;
     
     const [apiRes, htmlRes] = await Promise.all([
-      fetch(getProxyUrl(apiUrl), { next: { revalidate: 3600 } }),
-      fetch(getProxyUrl(htmlUrl), { next: { revalidate: 3600 } })
+      fetchDirect(apiUrl, { revalidate: 3600 }),
+      fetchDirect(htmlUrl, { isHtml: true, revalidate: 3600 })
     ]);
     
     if (!apiRes.ok) {

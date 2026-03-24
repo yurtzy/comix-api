@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getProxyUrl } from '@/lib/proxy';
+import { fetchDirect } from '@/lib/proxy';
 
 export async function GET(request: NextRequest) {
   try {
@@ -20,10 +20,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const proxyUrl = getProxyUrl(apiUrl.toString());
-    const res = await fetch(proxyUrl, {
-      next: { revalidate: 3600 }
-    });
+    const res = await fetchDirect(apiUrl.toString(), { revalidate: 3600 });
     
     if (!res.ok) {
       return Response.json({ error: 'Failed to fetch filter results' }, { status: res.status });

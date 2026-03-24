@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getProxyUrl } from '@/lib/proxy';
+import { fetchDirect } from '@/lib/proxy';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -37,10 +37,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const proxyUrl = getProxyUrl(apiUrl.toString());
-    const res = await fetch(proxyUrl, {
-      next: { revalidate: 3600 }
-    });
+    const res = await fetchDirect(apiUrl.toString(), { revalidate: 3600 });
     
     if (!res.ok) {
       return Response.json({ error: 'Failed to fetch search results' }, { status: res.status, headers: corsHeaders });

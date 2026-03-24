@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getProxyUrl } from '@/lib/proxy';
+import { fetchDirect } from '@/lib/proxy';
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,13 +9,8 @@ export async function GET(request: NextRequest) {
     if (!chapterId) {
       return Response.json({ error: 'Missing query parameter "chapterId"' }, { status: 400 });
     }
-
     const targetUrl = `https://comix.to/api/v2/chapters/${chapterId}`;
-    const proxyUrl = getProxyUrl(targetUrl);
-    const res = await fetch(proxyUrl, {
-      next: { revalidate: 3600 },
-      redirect: 'follow'
-    });
+    const res = await fetchDirect(targetUrl, { revalidate: 3600 });
     
     if (!res.ok) {
       return Response.json({ error: 'Chapter not found' }, { status: res.status });
