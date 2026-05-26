@@ -61,10 +61,37 @@ export async function fetchDirect(
   }
 
   // Direct fetch from Vercel's edge
-  return fetch(targetUrl, {
-    headers,
-    next: { revalidate },
-  });
+  try {
+    const res = await fetch(targetUrl, {
+      headers,
+      next: { revalidate },
+    });
+
+    // If direct fetch was blocked by Cloudflare (403/503), fall back to Apps Script proxy
+    if (!res.ok && (res.status === 403 || res.status === 503)) {
+      const text = await res.clone().text().catch(() => '');
+      if (isCloudflareChallenge(text) || res.status === 403) {
+        console.warn(`[proxy] Direct fetch to ${targetUrl} blocked (status ${res.status}). Falling back to Apps Script proxy...`);
+        const fallbackProxy = process.env.PROXY_URL || PROXY_URL;
+        const proxyUrl = `${fallbackProxy}?url=${encodeURIComponent(targetUrl)}`;
+        const reqHeaders: Record<string, string> = {};
+        if (headers['Cookie']) reqHeaders['Cookie'] = headers['Cookie'];
+        if (headers['User-Agent']) reqHeaders['User-Agent'] = headers['User-Agent'];
+        return fetch(proxyUrl, { headers: reqHeaders, next: { revalidate } });
+      }
+    }
+
+    return res;
+  } catch (error) {
+    console.error(`[proxy] Direct fetch failed:`, error);
+    // Fall back to Apps Script proxy on network/fetch errors too
+    const fallbackProxy = process.env.PROXY_URL || PROXY_URL;
+    const proxyUrl = `${fallbackProxy}?url=${encodeURIComponent(targetUrl)}`;
+    const reqHeaders: Record<string, string> = {};
+    if (headers['Cookie']) reqHeaders['Cookie'] = headers['Cookie'];
+    if (headers['User-Agent']) reqHeaders['User-Agent'] = headers['User-Agent'];
+    return fetch(proxyUrl, { headers: reqHeaders, next: { revalidate } });
+  }
 }
 
 /** Legacy helper — kept for compatibility, use fetchDirect instead */
