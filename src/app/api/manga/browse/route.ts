@@ -44,12 +44,16 @@ export async function GET(request: NextRequest) {
       const score = item.ratedAvg !== undefined ? item.ratedAvg : item.rated_avg;
       const latestChapter = item.latestChapter !== undefined ? item.latestChapter : item.latest_chapter;
 
+      const id = item.url ? item.url.replace('/title/', '') : `${hid}-${item.slug || ''}`;
+      const slug = item.slug || (item.url ? item.url.replace('/title/', '').replace(`${hid}-`, '') : '');
+      const link = item.url || `/title/${hid}-${slug}`;
+
       return {
-        id: `${hid}-${item.slug}`,
-        slug: item.slug,
+        id,
+        slug,
         title: item.title,
         alt_titles: item.altTitles || item.alt_titles,
-        link: `/title/${hid}-${item.slug}`,
+        link,
         img: (item.poster?.large || item.poster?.medium) || null,
         chapter: latestChapter ? `Ch.${latestChapter}` : 'N/A',
         genres: item.genres?.map((g: any) => g.title) || [],
