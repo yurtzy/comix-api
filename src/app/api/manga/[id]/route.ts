@@ -15,7 +15,7 @@ export async function GET(
 
     const hashId = id.split('-')[0];
 
-    const apiUrl = `https://comix.to/api/v2/manga/${hashId}`;
+    const apiUrl = `https://comix.to/api/v1/manga/${hashId}`;
     const htmlUrl = `https://comix.to/title/${id}`;
     
     const [apiRes, htmlRes] = await Promise.all([
@@ -47,14 +47,15 @@ export async function GET(
       }
     }
 
-    let followed = `${item.follows_total} users`;
+    const followsTotal = item.followsTotal !== undefined ? item.followsTotal : item.follows_total;
+    let followed = `${followsTotal} users`;
     let type = item.type || 'manga';
     let demographics = '';
     let authors = item.authors?.map((a: any) => a.title).join(', ') || 'Unknown';
     let artists = item.artists?.map((a: any) => a.title).join(', ') || 'Unknown';
     let genres = item.genres?.map((g: any) => g.title) || [];
     let themes: string[] = [];
-    let originalLanguage = item.original_language || 'Unknown';
+    let originalLanguage = item.originalLanguage || item.original_language || 'Unknown';
     let referrers: string[] = [];
     let scanlation_groups: { scanlation_group_id: number, name: string }[] = [];
 
@@ -132,15 +133,29 @@ export async function GET(
       }
     }
 
+    let first_chapter_id = null;
+    if (item.firstChapterUrl) {
+      const parts = item.firstChapterUrl.split('/');
+      const lastPart = parts[parts.length - 1]; // e.g. "9777916-chapter-0"
+      first_chapter_id = lastPart.split('-')[0];
+    }
+
+    let latest_chapter_id = null;
+    if (item.latestChapterUrl) {
+      const parts = item.latestChapterUrl.split('/');
+      const lastPart = parts[parts.length - 1]; // e.g. "9926639-chapter-71"
+      latest_chapter_id = lastPart.split('-')[0];
+    }
+
     const comic = {
-      id: `${item.hash_id}-${item.slug}`,
+      id: `${item.hid || item.hash_id}-${item.slug}`,
       slug: item.slug,
       title: item.title,
-      altTitles: item.alt_titles,
+      altTitles: item.altTitles || item.alt_titles,
       cover: (item.poster?.large || item.poster?.medium) || null,
       
-      score: item.rated_avg,
-      scoreUsers: item.rated_count,
+      score: item.ratedAvg !== undefined ? item.ratedAvg : item.rated_avg,
+      scoreUsers: item.ratedCount !== undefined ? item.ratedCount : item.rated_count,
       
       followed,
       type,
@@ -156,8 +171,10 @@ export async function GET(
       format: item.type || 'manga',
       status: item.status,
       synopsis: item.synopsis,
-      latest_chapter: item.latest_chapter,
-      year: item.year
+      latest_chapter: item.latestChapter !== undefined ? item.latestChapter : item.latest_chapter,
+      year: item.year,
+      first_chapter_id,
+      latest_chapter_id
     };
 
     return Response.json({ comic });

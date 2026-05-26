@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { getProxyUrl } from '@/lib/proxy';
+import { fetchDirect } from '@/lib/proxy';
 
 export async function GET(
   request: NextRequest,
@@ -15,17 +15,18 @@ export async function GET(
     const hashId = id.split('-')[0];
     const { searchParams } = new URL(request.url);
 
-    // Proxy the internal JSON API of comix.to
-    const apiUrl = new URL(`https://comix.to/api/v2/manga/${hashId}/chapters`);
+    // Proxy the internal JSON API of comix.to v1
+    const apiUrl = new URL(`https://comix.to/api/v1/manga/${hashId}/chapters`);
 
     // Forward applicable search filters like limit, page, scanlation_group_id
     for (const [key, value] of searchParams.entries()) {
       apiUrl.searchParams.set(key, value);
     }
 
-    const proxyUrl = getProxyUrl(apiUrl.toString());
-    const res = await fetch(proxyUrl, {
-      next: { revalidate: 60 } // Shorter revalidation for chapters to stay updated
+    // Forward incoming request headers to preserve cloudflare turnstile tokens
+    const res = await fetchDirect(apiUrl.toString(), {
+      revalidate: 60, // Shorter revalidation for chapters to stay updated
+      initHeaders: request.headers
     });
     
     if (!res.ok) {

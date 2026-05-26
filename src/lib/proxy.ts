@@ -17,7 +17,7 @@ const CF_HEADERS: Record<string, string> = {
  */
 export async function fetchDirect(
   targetUrl: string,
-  options?: { isHtml?: boolean; revalidate?: number }
+  options?: { isHtml?: boolean; revalidate?: number; initHeaders?: Headers | Record<string, string> }
 ): Promise<Response> {
   const isHtml = options?.isHtml ?? false;
   const revalidate = options?.revalidate ?? 3600;
@@ -30,10 +30,34 @@ export async function fetchDirect(
     'Referer': 'https://comix.to/',
   };
 
+  // Forward cookie and user-agent from client headers if present
+  if (options?.initHeaders) {
+    const getHeader = (name: string): string | null => {
+      if (options.initHeaders instanceof Headers) {
+        return options.initHeaders.get(name);
+      } else if (options.initHeaders && typeof options.initHeaders === 'object') {
+        const lowerName = name.toLowerCase();
+        for (const [k, v] of Object.entries(options.initHeaders)) {
+          if (k.toLowerCase() === lowerName) return String(v);
+        }
+      }
+      return null;
+    };
+
+    const cookie = getHeader('cookie');
+    if (cookie) headers['Cookie'] = cookie;
+
+    const ua = getHeader('user-agent');
+    if (ua) headers['User-Agent'] = ua;
+  }
+
   // If a custom PROXY_URL is set (user provided their own bypass proxy), use it
   if (process.env.PROXY_URL) {
     const proxyUrl = `${process.env.PROXY_URL}?url=${encodeURIComponent(targetUrl)}`;
-    return fetch(proxyUrl, { next: { revalidate } });
+    const reqHeaders: Record<string, string> = {};
+    if (headers['Cookie']) reqHeaders['Cookie'] = headers['Cookie'];
+    if (headers['User-Agent']) reqHeaders['User-Agent'] = headers['User-Agent'];
+    return fetch(proxyUrl, { headers: reqHeaders, next: { revalidate } });
   }
 
   // Direct fetch from Vercel's edge

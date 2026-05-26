@@ -9,8 +9,13 @@ export async function GET(request: NextRequest) {
     if (!chapterId) {
       return Response.json({ error: 'Missing query parameter "chapterId"' }, { status: 400 });
     }
-    const targetUrl = `https://comix.to/api/v2/chapters/${chapterId}`;
-    const res = await fetchDirect(targetUrl, { revalidate: 3600 });
+    const targetUrl = `https://comix.to/api/v1/chapters/${chapterId}`;
+    
+    // Forward incoming request headers to preserve cloudflare turnstile tokens
+    const res = await fetchDirect(targetUrl, { 
+      revalidate: 3600,
+      initHeaders: request.headers
+    });
     
     if (!res.ok) {
       return Response.json({ error: 'Chapter not found' }, { status: res.status });
@@ -30,7 +35,7 @@ export async function GET(request: NextRequest) {
     }));
 
     return Response.json({ 
-      chapterId: item.chapter_id,
+      chapterId: item.chapter_id !== undefined ? item.chapter_id : (item.chapterId !== undefined ? item.chapterId : chapterId),
       images,
       total_images: images.length
     });

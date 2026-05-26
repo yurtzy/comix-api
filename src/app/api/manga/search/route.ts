@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
       return Response.json({ error: 'Missing query parameter "q"' }, { status: 400, headers: corsHeaders });
     }
 
-    // Proxy the internal JSON API of comix.to
-    const apiUrl = new URL('https://comix.to/api/v2/manga');
+    // Proxy the internal JSON API of comix.to v1
+    const apiUrl = new URL('https://comix.to/api/v1/manga');
     apiUrl.searchParams.set('keyword', q);
 
     // Forward applicable search filters like limit, page, order, genres
@@ -60,21 +60,27 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const results = items.map((item: any) => ({
-      id: `${item.hash_id}-${item.slug}`,
-      slug: item.slug,
-      title: item.title,
-      alt_titles: item.alt_titles,
-      link: `/title/${item.hash_id}-${item.slug}`,
-      img: (item.poster?.large || item.poster?.medium) || null,
-      chapter: item.latest_chapter ? `Ch.${item.latest_chapter}` : 'N/A',
-      genres: item.genres?.map((g: any) => g.title) || [],
-      synopsis: item.synopsis,
-      status: item.status,
-      score: item.rated_avg,
-      year: item.year,
-      type: item.type
-    }));
+    const results = items.map((item: any) => {
+      const hid = item.hid || item.hash_id;
+      const score = item.ratedAvg !== undefined ? item.ratedAvg : item.rated_avg;
+      const latestChapter = item.latestChapter !== undefined ? item.latestChapter : item.latest_chapter;
+      
+      return {
+        id: `${hid}-${item.slug}`,
+        slug: item.slug,
+        title: item.title,
+        alt_titles: item.altTitles || item.alt_titles,
+        link: `/title/${hid}-${item.slug}`,
+        img: (item.poster?.large || item.poster?.medium) || null,
+        chapter: latestChapter ? `Ch.${latestChapter}` : 'N/A',
+        genres: item.genres?.map((g: any) => g.title) || [],
+        synopsis: item.synopsis,
+        status: item.status,
+        score,
+        year: item.year,
+        type: item.type
+      };
+    });
 
     return Response.json(
       { results, pagination: data.result?.pagination },
