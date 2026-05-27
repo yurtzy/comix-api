@@ -35,7 +35,7 @@ const endpoints: Endpoint[] = [
     method: 'GET',
     path: '/api/manga/home',
     summary: 'Homepage Feed',
-    description: 'Returns two curated lists from the Comix.to homepage: the most recently popular titles and the latest chapter updates. Great for building a landing feed.',
+    description: 'Returns four curated lists from the Comix.to homepage: the most recently popular titles, latest chapter updates, recently added series, and completed series. Great for building a landing feed.',
     parameters: [
       {
         name: 'sfw',
@@ -59,7 +59,9 @@ const endpoints: Endpoint[] = [
       "updatedAt": "2 days ago"
     }
   ],
-  "latest": [ ... ]
+  "latest": [ ... ],
+  "recentlyAdded": [ ... ],
+  "completed": [ ... ]
 }`,
     },
     liveUrl: '/api/manga/home',

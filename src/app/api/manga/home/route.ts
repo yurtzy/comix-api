@@ -38,27 +38,34 @@ export async function GET(request: NextRequest) {
 
     const popular: any[] = [];
     const latest: any[] = [];
+    const recentlyAdded: any[] = [];
+    const completed: any[] = [];
 
     const { searchParams } = new URL(request.url);
     const sfw = searchParams.get('sfw') === 'true';
+
+    // Helper to map API manga item to standard output format
+    const mapMangaItem = (item: any) => {
+      const title = item.title;
+      const link = item.url || (item.hid ? `/title/${item.hid}-${item.slug || ''}` : null);
+      const img = item.poster?.medium || item.poster?.large || null;
+      const latestChapter = item.latestChapter !== undefined ? item.latestChapter : item.latest_chapter;
+      const chapter = latestChapter ? `Ch.${latestChapter}` : 'N/A';
+      const id = link ? link.replace('/title/', '') : null;
+      
+      return { title, link, img, chapter, genres: [], id };
+    };
 
     // 1. Parse Popular (Trending)
     const popularKey = Object.keys(queries).find(k => k.includes('"trending"') && k.includes('"manga","top"'));
     const popularItems = popularKey ? queries[popularKey] : [];
     if (Array.isArray(popularItems)) {
       popularItems.forEach((item: any) => {
-        const title = item.title;
-        const link = item.url;
-        const img = item.poster?.medium || item.poster?.large || null;
-        const latestChapter = item.latestChapter !== undefined ? item.latestChapter : item.latest_chapter;
-        const chapter = latestChapter ? `Ch.${latestChapter}` : 'N/A';
-        const id = link ? link.replace('/title/', '') : null;
-        
         // SFW filter: check contentRating
         if (sfw && (item.contentRating === 'nsfw' || item.contentRating === 'suggestive')) return;
-
-        if (title && id) {
-          popular.push({ title, link, img, chapter, genres: [], id });
+        const mapped = mapMangaItem(item);
+        if (mapped.title && mapped.id) {
+          popular.push(mapped);
         }
       });
     }
@@ -69,22 +76,75 @@ export async function GET(request: NextRequest) {
     const latestItems = latestResult?.items || [];
     if (Array.isArray(latestItems)) {
       latestItems.forEach((item: any) => {
-        const title = item.title;
-        const link = item.url;
-        const img = item.poster?.medium || item.poster?.large || null;
-        const latestChapter = item.latestChapter !== undefined ? item.latestChapter : item.latest_chapter;
-        const chapter = latestChapter ? `Ch.${latestChapter}` : 'N/A';
-        const id = link ? link.replace('/title/', '') : null;
-
         if (sfw && (item.contentRating === 'nsfw' || item.contentRating === 'suggestive')) return;
-
-        if (title && id) {
-          latest.push({ title, link, img, chapter, genres: [], id });
+        const mapped = mapMangaItem(item);
+        if (mapped.title && mapped.id) {
+          latest.push(mapped);
         }
       });
     }
 
-    return Response.json({ popular, latest });
+    // 3. Parse Recently Added (from initial-data or fallback fetch)
+    const recentlyAddedKey = Object.keys(queries).find(k => k.includes('"order":{"created_at":"desc"}') && k.includes('"manga","list"'));
+    const recentlyAddedResult = recentlyAddedKey ? queries[recentlyAddedKey] : null;
+    let recentlyAddedItems = recentlyAddedResult?.items || [];
+
+    if (!recentlyAddedItems || recentlyAddedItems.length === 0) {
+      // Fallback direct API fetch for recently added
+      try {
+        const fallbackUrl = 'https://comix.to/api/v1/manga?order[created_at]=desc&limit=20';
+        const fallbackRes = await fetchDirect(fallbackUrl, { revalidate: 3600 });
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          recentlyAddedItems = fallbackData.result?.items || [];
+        }
+      } catch (e) {
+        console.error('[home] Failed recently added fallback fetch:', e);
+      }
+    }
+
+    if (Array.isArray(recentlyAddedItems)) {
+      const NSFW_GENRE_IDS = [87264, 87266, 87268, 87265];
+      recentlyAddedItems.forEach((item: any) => {
+        if (sfw) {
+          if (item.is_nsfw || item.contentRating === 'nsfw' || item.contentRating === 'suggestive') return;
+          const itemGenreIds = item.genres?.map((g: any) => g.id) || [];
+          if (itemGenreIds.some((id: number) => NSFW_GENRE_IDS.includes(id))) return;
+        }
+        const mapped = mapMangaItem(item);
+        if (mapped.title && mapped.id) {
+          recentlyAdded.push(mapped);
+        }
+      });
+    }
+
+    // 4. Fetch Completed Series (Statuses = Finished)
+    try {
+      const completedUrl = 'https://comix.to/api/v1/manga?statuses[]=finished&order[created_at]=desc&limit=20';
+      const completedRes = await fetchDirect(completedUrl, { revalidate: 3600 });
+      if (completedRes.ok) {
+        const completedData = await completedRes.json();
+        const completedItems = completedData.result?.items || [];
+        if (Array.isArray(completedItems)) {
+          const NSFW_GENRE_IDS = [87264, 87266, 87268, 87265];
+          completedItems.forEach((item: any) => {
+            if (sfw) {
+              if (item.is_nsfw || item.contentRating === 'nsfw' || item.contentRating === 'suggestive') return;
+              const itemGenreIds = item.genres?.map((g: any) => g.id) || [];
+              if (itemGenreIds.some((id: number) => NSFW_GENRE_IDS.includes(id))) return;
+            }
+            const mapped = mapMangaItem(item);
+            if (mapped.title && mapped.id) {
+              completed.push(mapped);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      console.error('[home] Failed completed series fetch:', e);
+    }
+
+    return Response.json({ popular, latest, recentlyAdded, completed });
 
   } catch (error) {
     console.error(error);
