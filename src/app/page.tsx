@@ -69,13 +69,14 @@ const endpoints: Endpoint[] = [
     method: 'GET',
     path: '/api/manga/search',
     summary: 'Search Manga',
-    description: 'Full-text search against the Comix.to database. Because the internal API is proxied directly, all advanced filters (genres, types, status) work natively — just pass them as query parameters.',
+    description: 'Full-text search against the Comix.to database. Because the internal API is proxied directly, all advanced filters (genres, types, status, content_rating) work natively — just pass them as query parameters.',
     parameters: [
       { name: 'q', in: 'query', type: 'string', required: true, description: 'The search keyword.', example: 'solo leveling' },
       { name: 'sfw', in: 'query', type: 'boolean', required: false, description: 'Filter out NSFW content.', example: 'true' },
       { name: 'types[]', in: 'query', type: 'string[]', required: false, description: 'Filter by type(s). Values: manga, manhwa, manhua, webtoon.', example: 'manhwa' },
       { name: 'status', in: 'query', type: 'string', required: false, description: 'Filter by publication status. Values: releasing, completed, hiatus.', example: 'releasing' },
       { name: 'genres[]', in: 'query', type: 'string[]', required: false, description: 'Filter by genre slugs.', example: 'action' },
+      { name: 'content_rating[]', in: 'query', type: 'string[]', required: false, description: 'Filter by content rating(s). Values: safe, suggestive, erotica, pornographic.', example: 'safe' },
       { name: 'page', in: 'query', type: 'number', required: false, description: 'Page number for pagination.', example: '1' },
       { name: 'limit', in: 'query', type: 'number', required: false, description: 'Number of results per page (default 20).', example: '20' },
     ],
@@ -284,6 +285,7 @@ const endpoints: Endpoint[] = [
     parameters: [
       { name: 'sort', in: 'query', type: 'string', required: false, description: 'Sort order. Values: newest (default), top, updated.', example: 'newest' },
       { name: 'sfw', in: 'query', type: 'boolean', required: false, description: 'Filter out NSFW content.', example: 'true' },
+      { name: 'content_rating[]', in: 'query', type: 'string[]', required: false, description: 'Filter by content rating(s). Values: safe, suggestive, erotica, pornographic.', example: 'safe' },
       { name: 'page', in: 'query', type: 'number', required: false, description: 'Page number.', example: '1' },
       { name: 'limit', in: 'query', type: 'number', required: false, description: 'Results per page.', example: '20' },
     ],
@@ -310,6 +312,7 @@ const endpoints: Endpoint[] = [
     parameters: [
       { name: 'genres', in: 'query', type: 'string', required: false, description: 'Comma-separated list of genre slugs to filter by.', example: 'action,adventure' },
       { name: 'sfw', in: 'query', type: 'boolean', required: false, description: 'Filter out NSFW content.', example: 'true' },
+      { name: 'content_rating[]', in: 'query', type: 'string[]', required: false, description: 'Filter by content rating(s). Values: safe, suggestive, erotica, pornographic.', example: 'safe' },
       { name: 'page', in: 'query', type: 'number', required: false, description: 'Page number.', example: '1' },
       { name: 'limit', in: 'query', type: 'number', required: false, description: 'Results per page.', example: '20' },
     ],

@@ -19,12 +19,10 @@ Whether you're building a manga reader app, a Discord bot, or a personal reading
 Assuming you are running the API locally at `http://localhost:3000`.
 
 **Fetch the most popular manga right now:**
-**Fetch the most popular manga right now:**
 ```bash
 curl "http://localhost:3000/api/manga/home"
 ```
 
-**Search for a specific manga (e.g., "Solo Leveling"):**
 **Search for a specific manga (e.g., "Solo Leveling"):**
 ```bash
 curl "http://localhost:3000/api/manga/search?q=solo"
@@ -76,7 +74,7 @@ Searches for mangas based on a keyword. You can also pass advanced filters.
 - **Parameters:**
   - `q` *(string, required)*: The search query.
   - `sfw` *(boolean, optional)*: Filter out NSFW content.
-  - `types[]`, `status`, `genres[]`, `page`, `limit` *(optional)*: Advanced filters.
+  - `types[]`, `status`, `genres[]`, `content_rating[]`, `demographic[]`, `year_from`, `year_to`, `page`, `limit` *(optional)*: Advanced filters. E.g., `content_rating[]=safe&content_rating[]=suggestive`.
 - **Example Request:** `GET /api/manga/search?q=demon&types[]=manhwa&status=releasing`
 - **Example Response:**
   ```json
