@@ -46,3 +46,5 @@ next-env.d.ts
 *.log
 response*.json
 test*.json
+/playground
+

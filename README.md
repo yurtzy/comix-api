@@ -152,7 +152,42 @@ Fetches the actual CDN comic pages/images to render a chapter. All image URLs re
   }
   ```
 
-### 6. Filter & Browse (`/api/manga/filter` & `/api/manga/browse`)
+### 6. Manga Collections (`/api/manga/collections/:id`)
+Proxies public user-created collections from Comix.to and returns structured collection metadata and the mapped list of manga items.
+- **Method:** `GET`
+- **Path Parameter:**
+  - `id` *(string, required)*: The numeric collection ID (e.g. `1692`).
+- **Example Request:** `GET /api/manga/collections/1692`
+- **Example Response:**
+  ```json
+  {
+    "collection": {
+      "id": 1692,
+      "name": "Ongoing - Historical / Fantasy Romance",
+      "description": "Ongoing Series",
+      "itemCount": 78,
+      "likeCount": 3,
+      "cover": {
+        "id": 51373,
+        "title": "The Reason Why That Villainess Picked Up A Sword"
+      }
+    },
+    "results": [
+      {
+        "id": "55kym-the-reason-why-that-villainess-picked-up-a-sword",
+        "slug": "the-reason-why-that-villainess-picked-up-a-sword",
+        "title": "The Reason Why That Villainess Picked Up A Sword",
+        "img": "https://static.comix.to/77c6/i/d/c7/68df00e6a9ca2.jpg",
+        "chapter": "Ch.60",
+        "status": "releasing",
+        "score": 7.2,
+        "type": "manhwa"
+      }
+    ]
+  }
+  ```
+
+### 7. Filter & Browse (`/api/manga/filter` & `/api/manga/browse`)
 Used for querying the database without a specific search term. 
 - `/api/manga/browse` sorts by `newest` by default.
 - `/api/manga/filter` requires specific filters like `?genres=action,adventure`.
