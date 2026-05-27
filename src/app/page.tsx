@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -653,6 +653,198 @@ function EndpointCard({ endpoint }: { endpoint: Endpoint }) {
   );
 }
 
+// ─── Live Tester ──────────────────────────────────────────────────────────────
+
+function LiveTester() {
+  const [selectedId, setSelectedId] = useState<string>(endpoints[0].id);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const [status, setStatus] = useState<number | null>(null);
+  const [elapsed, setElapsed] = useState<number | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const selected = endpoints.find(e => e.id === selectedId) || endpoints[0];
+
+  async function run() {
+    if (!selected.liveUrl) return;
+    if (abortRef.current) abortRef.current.abort();
+    abortRef.current = new AbortController();
+    setLoading(true);
+    setResult(null);
+    setStatus(null);
+    setElapsed(null);
+    const t0 = Date.now();
+    try {
+      const res = await fetch(selected.liveUrl, { signal: abortRef.current.signal });
+      const ms = Date.now() - t0;
+      setStatus(res.status);
+      setElapsed(ms);
+      const text = await res.text();
+      try {
+        setResult(JSON.stringify(JSON.parse(text), null, 2));
+      } catch {
+        setResult(text);
+      }
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        setStatus(0);
+        setResult(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const hasLive = !!selected.liveUrl;
+  const statusColor = status === null ? '#4b5563' : status >= 200 && status < 300 ? '#22c55e' : '#ef4444';
+
+  return (
+    <div style={{
+      position: 'sticky',
+      top: '24px',
+      width: '340px',
+      flexShrink: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0',
+      border: '1px solid rgba(255,255,255,0.07)',
+      borderRadius: '12px',
+      overflow: 'hidden',
+      background: '#0d1117',
+      alignSelf: 'flex-start',
+      maxHeight: 'calc(100vh - 48px)',
+    }}>
+      {/* Header */}
+      <div style={{
+        padding: '14px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+      }}>
+        <span style={{ fontSize: '0.75rem', fontWeight: '700', color: '#4b5563', letterSpacing: '0.08em', textTransform: 'uppercase' }}>Live Tester</span>
+        <span style={{
+          fontSize: '0.65rem',
+          padding: '2px 8px',
+          borderRadius: '4px',
+          background: 'rgba(34,197,94,0.08)',
+          border: '1px solid rgba(34,197,94,0.15)',
+          color: '#22c55e',
+          fontWeight: '600',
+          letterSpacing: '0.06em',
+        }}>LIVE</span>
+      </div>
+
+      {/* Endpoint picker */}
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ fontSize: '0.68rem', color: '#374151', marginBottom: '6px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Endpoint</div>
+        <select
+          value={selectedId}
+          onChange={e => { setSelectedId(e.target.value); setResult(null); setStatus(null); setElapsed(null); }}
+          style={{
+            width: '100%',
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px solid rgba(255,255,255,0.08)',
+            borderRadius: '7px',
+            color: '#d1d5db',
+            padding: '7px 10px',
+            fontSize: '0.8rem',
+            cursor: 'pointer',
+            outline: 'none',
+            appearance: 'none',
+          }}
+        >
+          {endpoints.map(ep => (
+            <option key={ep.id} value={ep.id} style={{ background: '#0d1117' }}>
+              {ep.summary}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* URL preview */}
+      <div style={{ padding: '10px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ fontSize: '0.68rem', color: '#374151', marginBottom: '5px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.07em' }}>URL</div>
+        <code style={{
+          fontSize: '0.75rem',
+          color: selected.liveUrl ? '#60a5fa' : '#4b5563',
+          fontFamily: 'var(--font-geist-mono, monospace)',
+          wordBreak: 'break-all',
+          lineHeight: 1.5,
+        }}>
+          {selected.liveUrl || 'No live URL — requires path parameter'}
+        </code>
+      </div>
+
+      {/* Send button */}
+      <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+        <button
+          onClick={run}
+          disabled={loading || !hasLive}
+          style={{
+            width: '100%',
+            padding: '9px 0',
+            borderRadius: '7px',
+            border: '1px solid rgba(59,130,246,0.25)',
+            background: loading ? 'rgba(59,130,246,0.05)' : 'rgba(59,130,246,0.1)',
+            color: hasLive ? '#60a5fa' : '#374151',
+            fontSize: '0.8rem',
+            fontWeight: '600',
+            cursor: hasLive && !loading ? 'pointer' : 'not-allowed',
+            letterSpacing: '0.04em',
+            transition: 'all 0.15s ease',
+            fontFamily: 'inherit',
+          }}
+        >
+          {loading ? 'Sending...' : 'Send Request'}
+        </button>
+      </div>
+
+      {/* Status bar */}
+      {status !== null && (
+        <div style={{
+          padding: '8px 16px',
+          borderBottom: '1px solid rgba(255,255,255,0.05)',
+          display: 'flex',
+          gap: '12px',
+          alignItems: 'center',
+          fontSize: '0.73rem',
+        }}>
+          <span style={{ color: '#4b5563' }}>Status</span>
+          <span style={{ color: statusColor, fontWeight: '700', fontFamily: 'monospace' }}>{status}</span>
+          {elapsed !== null && (
+            <>
+              <span style={{ color: '#1f2937' }}>·</span>
+              <span style={{ color: '#374151' }}>{elapsed}ms</span>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Response */}
+      <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ padding: '10px 16px 6px', fontSize: '0.68rem', color: '#374151', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Response</div>
+        <pre style={{
+          margin: 0,
+          padding: '0 16px 16px',
+          fontSize: '0.73rem',
+          color: result ? '#e2e8f0' : '#1f2937',
+          fontFamily: 'var(--font-geist-mono, monospace)',
+          overflowY: 'auto',
+          overflowX: 'auto',
+          flex: 1,
+          lineHeight: 1.65,
+          maxHeight: '380px',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-all',
+        }}>
+          {loading ? 'Waiting for response...' : result ?? 'Hit Send Request to see a live response from the API.'}
+        </pre>
+      </div>
+    </div>
+  );
+}
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -771,8 +963,9 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Main content */}
-      <main style={{ marginLeft: '220px', padding: '64px 56px', maxWidth: '900px' }}>
+      {/* Main content wrapper */}
+      <div style={{ marginLeft: '220px', display: 'flex', alignItems: 'flex-start', gap: '32px', padding: '48px 40px 48px 48px' }}>
+      <main style={{ flex: 1, minWidth: 0 }}>
 
         {/* Hero */}
         <header style={{ marginBottom: '56px' }}>
@@ -972,6 +1165,13 @@ export default function Home() {
           <span>Built with Next.js · Edge Runtime</span>
         </footer>
       </main>
+
+      {/* Right panel — Live Tester */}
+      <div style={{ display: 'none' }} id="tester-mobile" />
+      <aside style={{ paddingTop: '0px' }}>
+        <LiveTester />
+      </aside>
+      </div>
     </div>
   );
 }
