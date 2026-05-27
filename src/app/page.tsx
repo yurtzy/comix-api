@@ -1050,10 +1050,10 @@ export default function Home() {
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {[
-              { label: 'Fetch the most popular manga', cmd: 'curl "https://your-deployment.vercel.app/api/manga/home"' },
-              { label: 'Search for a title', cmd: 'curl "https://your-deployment.vercel.app/api/manga/search?q=solo+leveling"' },
-              { label: 'Get comic details', cmd: 'curl "https://your-deployment.vercel.app/api/manga/n8we-the-chick-class-hunter-is-filial"' },
-              { label: 'Read a chapter', cmd: 'curl "https://your-deployment.vercel.app/api/manga/read?chapterId=8295088"' },
+              { label: 'Fetch the most popular manga', cmd: 'curl "https://comix-api.vercel.app/api/manga/home"' },
+              { label: 'Search for a title', cmd: 'curl "https://comix-api.vercel.app/api/manga/search?q=solo+leveling"' },
+              { label: 'Get comic details', cmd: 'curl "https://comix-api.vercel.app/api/manga/n8we-the-chick-class-hunter-is-filial"' },
+              { label: 'Read a chapter', cmd: 'curl "https://comix-api.vercel.app/api/manga/read?chapterId=8295088"' },
             ].map(item => (
               <div key={item.cmd} style={{
                 borderRadius: '8px',
