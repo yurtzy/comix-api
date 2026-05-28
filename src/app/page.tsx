@@ -35,7 +35,7 @@ const endpoints: Endpoint[] = [
     method: 'GET',
     path: '/api/manga/home',
     summary: 'Homepage Feed',
-    description: 'Returns four curated lists from the Comix.to homepage: the most recently popular titles, latest chapter updates, recently added series, and completed series. Great for building a landing feed.',
+    description: 'Returns six curated lists from the Comix.to homepage: popular trending titles, latest hot chapter updates, recently added series, completed series, popular scanlation groups, and public curated collections. Perfect for a rich landing feed.',
     parameters: [
       {
         name: 'sfw',
@@ -49,19 +49,33 @@ const endpoints: Endpoint[] = [
     example: {
       request: 'GET /api/manga/home?sfw=true',
       response: `{
-  "popular": [
-    {
-      "id": "n8we-the-chick-class-hunter-is-filial",
-      "title": "The Chick-Class Hunter is Filial!",
-      "cover": "/api/image?url=https://static.comix.to/...",
-      "chapter": "Ch.58",
-      "genres": ["Action", "Fantasy"],
-      "updatedAt": "2 days ago"
-    }
-  ],
+  "popular": [ ... ],
   "latest": [ ... ],
   "recentlyAdded": [ ... ],
-  "completed": [ ... ]
+  "completed": [ ... ],
+  "popularGroups": [
+    {
+      "id": "nndl3e",
+      "name": "desire scans",
+      "slug": "desire666",
+      "avatar": "https://...",
+      "upload_count": 714,
+      "link": "/api/manga/groups?keyword=desire%20scans"
+    }
+  ],
+  "collections": [
+    {
+      "id": 1692,
+      "name": "Ongoing - Historical / Fantasy Romance",
+      "description": "Ongoing Series",
+      "item_count": 78,
+      "like_count": 3,
+      "cover": "https://...",
+      "created_at": "2w ago",
+      "updated_at": "38m ago",
+      "link": "/api/manga/collections/1692"
+    }
+  ]
 }`,
     },
     liveUrl: '/api/manga/home',
@@ -283,27 +297,38 @@ const endpoints: Endpoint[] = [
     method: 'GET',
     path: '/api/manga/browse',
     summary: 'Browse All Manga',
-    description: 'Browse the entire catalogue without a search term. Defaults to newest-first ordering. All sort and filter parameters are forwarded to the upstream API.',
+    description: 'Browse the entire catalogue without a search term. Defaults to newest-first ordering. Supports predefined helper feeds like Trending Webtoons and Trending Manga.',
     parameters: [
-      { name: 'sort', in: 'query', type: 'string', required: false, description: 'Sort order. Values: newest (default), top, updated.', example: 'newest' },
+      { name: 'feed', in: 'query', type: 'string', required: false, description: 'Predefined helper feed to get trending manga/webtoons. Values: trending-webtoon, trending-manga.', example: 'trending-webtoon' },
+      { name: 'sort', in: 'query', type: 'string', required: false, description: 'Sort order. Values: relevance:desc, chapter_updated_at:desc, created_at:desc, title:asc, year:desc, score:desc, views_7d:desc, follows_total:desc.', example: 'views_7d:desc' },
       { name: 'sfw', in: 'query', type: 'boolean', required: false, description: 'Filter out NSFW content.', example: 'true' },
       { name: 'content_rating[]', in: 'query', type: 'string[]', required: false, description: 'Filter by content rating(s). Values: safe, suggestive, erotica, pornographic.', example: 'safe' },
       { name: 'page', in: 'query', type: 'number', required: false, description: 'Page number.', example: '1' },
       { name: 'limit', in: 'query', type: 'number', required: false, description: 'Results per page.', example: '20' },
     ],
     example: {
-      request: 'GET /api/manga/browse?sort=top&sfw=true&page=1',
+      request: 'GET /api/manga/browse?feed=trending-webtoon&sfw=true',
       response: `{
-  "results": [ ... ],
+  "results": [
+    {
+      "id": "l7re-anyone-can-beat-the-original",
+      "slug": "anyone-can-beat-the-original",
+      "title": "Anyone Can Beat the Original",
+      "link": "/title/l7re-anyone-can-beat-the-original",
+      "img": "https://static.comix.to/...",
+      "chapter": "Ch.42",
+      "genres": [ "Drama", "Fantasy", "Romance" ],
+      "status": "releasing",
+      "type": "manhwa"
+    }
+  ],
   "pagination": {
     "current_page": 1,
-    "last_page": 500,
-    "per_page": 20,
-    "total": 10000
+    "last_page": 15
   }
 }`,
     },
-    liveUrl: '/api/manga/browse?sort=newest',
+    liveUrl: '/api/manga/browse?feed=trending-webtoon',
   },
   {
     id: 'filter',
@@ -329,6 +354,100 @@ const endpoints: Endpoint[] = [
 }`,
     },
     liveUrl: '/api/manga/filter?genres=action',
+  },
+  {
+    id: 'genres',
+    method: 'GET',
+    path: '/api/manga/genres',
+    summary: 'Manga Genres & Demographics',
+    description: 'Exposes all available genres, publication formats (like Web Comics), and target demographics supported by the filter and browse endpoints.',
+    parameters: [],
+    example: {
+      request: 'GET /api/manga/genres',
+      response: `{
+  "genres": [
+    { "id": 6, "label": "Action", "slug": "action" },
+    { "id": 87264, "label": "Adult", "slug": "adult" }
+  ],
+  "formats": [
+    { "id": 93171, "label": "Web Comic", "slug": "web-comic" }
+  ],
+  "demographics": [
+    { "id": 3, "label": "Josei", "slug": "josei" }
+  ]
+}`,
+    },
+    liveUrl: '/api/manga/genres',
+  },
+  {
+    id: 'groups',
+    method: 'GET',
+    path: '/api/manga/groups',
+    summary: 'Scanlation Groups',
+    description: 'Fetches the paginated list of all active scanlation groups on the platform. Supports keyword search.',
+    parameters: [
+      { name: 'keyword', in: 'query', type: 'string', required: false, description: 'Search query for filtering groups by name.', example: 'asura' },
+      { name: 'page', in: 'query', type: 'number', required: false, description: 'Page number.', example: '1' },
+      { name: 'limit', in: 'query', type: 'number', required: false, description: 'Results per page.', example: '20' },
+    ],
+    example: {
+      request: 'GET /api/manga/groups?keyword=asura',
+      response: `{
+  "results": [
+    {
+      "id": 162,
+      "name": "Asura Scans",
+      "slug": "asurascans",
+      "chapter_count": 30862,
+      "manga_count": 520,
+      "views_total": 65419372,
+      "avatar": "https://...",
+      "created_at": "Oct 2020",
+      "updated_at": "May 2026",
+      "link": "/groups/162"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "last_page": 1
+  }
+}`,
+    },
+    liveUrl: '/api/manga/groups?keyword=asura',
+  },
+  {
+    id: 'collections-list',
+    method: 'GET',
+    path: '/api/manga/collections',
+    summary: 'Collections List',
+    description: 'Fetches the paginated list of all public user curated manga collections, sorted by recent activity.',
+    parameters: [
+      { name: 'page', in: 'query', type: 'number', required: false, description: 'Page number.', example: '1' },
+      { name: 'limit', in: 'query', type: 'number', required: false, description: 'Results per page.', example: '20' },
+    ],
+    example: {
+      request: 'GET /api/manga/collections?limit=5',
+      response: `{
+  "results": [
+    {
+      "id": 1692,
+      "name": "Ongoing - Historical / Fantasy Romance",
+      "description": "Ongoing Series",
+      "item_count": 78,
+      "like_count": 3,
+      "cover": "https://...",
+      "created_at": "2w ago",
+      "updated_at": "38m ago",
+      "link": "/api/manga/collections/1692"
+    }
+  ],
+  "pagination": {
+    "current_page": 1,
+    "last_page": 120
+  }
+}`,
+    },
+    liveUrl: '/api/manga/collections?limit=5',
   },
   {
     id: 'image',

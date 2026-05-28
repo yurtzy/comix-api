@@ -8,13 +8,27 @@ export async function GET(request: NextRequest) {
     // Proxy the internal JSON API of comix.to v1
     const apiUrl = new URL('https://comix.to/api/v1/manga');
 
-    // Default sorts for browsing if not provided
-    if (!searchParams.has('sort')) {
-      apiUrl.searchParams.set('sort', 'newest'); // e.g. newest, top, updated
+    const feed = searchParams.get('feed');
+
+    if (feed === 'trending-webtoon') {
+      apiUrl.searchParams.append('types[]', 'manhwa');
+      apiUrl.searchParams.append('types[]', 'manhua');
+      apiUrl.searchParams.set('order[views_7d]', 'desc');
+    } else if (feed === 'trending-manga') {
+      apiUrl.searchParams.append('types[]', 'manga');
+      apiUrl.searchParams.set('order[views_7d]', 'desc');
+    } else {
+      // Default sorts for browsing if not provided and not a special feed
+      if (!searchParams.has('sort') && !searchParams.has('order[views_7d]')) {
+        apiUrl.searchParams.set('sort', 'newest'); // e.g. newest, top, updated
+      }
     }
 
+    // Forward other query parameters (excluding the helper 'feed')
     for (const [key, value] of searchParams.entries()) {
-      apiUrl.searchParams.append(key, value);
+      if (key !== 'feed') {
+        apiUrl.searchParams.append(key, value);
+      }
     }
 
     const res = await fetchDirect(apiUrl.toString(), { revalidate: 3600 });

@@ -61,7 +61,6 @@ export async function GET(request: NextRequest) {
     const popularItems = popularKey ? queries[popularKey] : [];
     if (Array.isArray(popularItems)) {
       popularItems.forEach((item: any) => {
-        // SFW filter: check contentRating
         if (sfw && (item.contentRating === 'nsfw' || item.contentRating === 'suggestive')) return;
         const mapped = mapMangaItem(item);
         if (mapped.title && mapped.id) {
@@ -90,7 +89,6 @@ export async function GET(request: NextRequest) {
     let recentlyAddedItems = recentlyAddedResult?.items || [];
 
     if (!recentlyAddedItems || recentlyAddedItems.length === 0) {
-      // Fallback direct API fetch for recently added
       try {
         const fallbackUrl = 'https://comix.to/api/v1/manga?order[created_at]=desc&limit=20';
         const fallbackRes = await fetchDirect(fallbackUrl, { revalidate: 3600 });
@@ -144,7 +142,35 @@ export async function GET(request: NextRequest) {
       console.error('[home] Failed completed series fetch:', e);
     }
 
-    return Response.json({ popular, latest, recentlyAdded, completed });
+    // 5. Parse Popular Groups (topUploaders)
+    const groupsKey = Object.keys(queries).find(k => k.includes('"topUploaders"') && k.includes('"users"'));
+    const groupsItems = groupsKey ? queries[groupsKey] : [];
+    const popularGroups = Array.isArray(groupsItems) ? groupsItems.map((item: any) => ({
+      id: item.hashId,
+      name: item.displayName || item.username,
+      slug: item.username,
+      avatar: item.avatar,
+      upload_count: item.uploadCount,
+      link: `/api/manga/groups?keyword=${encodeURIComponent(item.displayName || item.username)}`
+    })) : [];
+
+    // 6. Parse Collections
+    const collectionsKey = Object.keys(queries).find(k => k.includes('"collections"') && k.includes('"list"'));
+    const collectionsResult = collectionsKey ? queries[collectionsKey] : null;
+    const collectionsItems = collectionsResult?.items || [];
+    const collections = Array.isArray(collectionsItems) ? collectionsItems.map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      description: item.description || '',
+      item_count: item.itemCount,
+      like_count: item.likeCount,
+      cover: item.cover,
+      created_at: item.createdAtFormatted,
+      updated_at: item.updatedAtFormatted,
+      link: `/api/manga/collections/${item.id}`
+    })) : [];
+
+    return Response.json({ popular, latest, recentlyAdded, completed, popularGroups, collections });
 
   } catch (error) {
     console.error(error);
