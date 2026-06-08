@@ -70,7 +70,16 @@ export async function GET(
       return Response.json({ error: 'Failed to decrypt chapters payload' }, { status: 500 });
     }
 
-    return Response.json(decryptedData);
+    const formattedData = {
+      result: {
+        items: decryptedData.items || [],
+        pagination: {
+          last_page: decryptedData.meta?.lastPage || 1
+        }
+      }
+    };
+
+    return Response.json(formattedData);
 
   } catch (error) {
     console.error('[manga/chapters] Error fetching/decrypting chapters:', error);
