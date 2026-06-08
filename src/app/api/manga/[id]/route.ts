@@ -147,9 +147,11 @@ export async function GET(
       latest_chapter_id = lastPart.split('-')[0];
     }
 
+    const hid = item.hid || item.hash_id;
+    const slug = item.slug || (item.url ? item.url.replace('/title/', '').replace(`${hid}-`, '') : '');
     const comic = {
-      id: `${item.hid || item.hash_id}-${item.slug}`,
-      slug: item.slug,
+      id: `${hid}-${slug}`,
+      slug,
       title: item.title,
       altTitles: item.altTitles || item.alt_titles,
       cover: (item.poster?.large || item.poster?.medium) || null,

@@ -47,7 +47,9 @@ export async function GET(request: NextRequest) {
     // Helper to map API manga item to standard output format
     const mapMangaItem = (item: any) => {
       const title = item.title;
-      const link = item.url || (item.hid ? `/title/${item.hid}-${item.slug || ''}` : null);
+      const hid = item.hid || item.hash_id || '';
+      const slug = item.slug || (item.url ? item.url.replace('/title/', '').replace(`${hid}-`, '') : '');
+      const link = item.url || (hid ? `/title/${hid}-${slug}` : null);
       const img = item.poster?.medium || item.poster?.large || null;
       const latestChapter = item.latestChapter !== undefined ? item.latestChapter : item.latest_chapter;
       const chapter = latestChapter ? `Ch.${latestChapter}` : 'N/A';
