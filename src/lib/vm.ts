@@ -6,7 +6,7 @@ let cachedJs: string | null = null;
 function loadVMCode(): string {
   if (cachedJs) return cachedJs;
   
-  const filename = 'secure-tfp0vp-D10gqGoG.js';
+  const filename = 'secure-tgambp-7QDhTKTL.js';
   const filePath = path.join(process.cwd(), filename);
   
   if (!fs.existsSync(filePath)) {
@@ -22,10 +22,10 @@ function loadVMCode(): string {
     'const e = (x) => (x && x.__esModule) ? x : { default: x };'
   );
   
-  // Expose the internal 'io' export from VM to global namespace so we can register Axios
+  // Expose the internal 'to' and 'Qa' exports from VM to global namespace so we can register Axios and decrypt
   processedJs = processedJs.replace(
     /export\s*\{[^}]+\};?/g,
-    'global.Nr = Nr; global.xr = xr; global.Mr = Mr; global.io = io;'
+    'global.to = to; global.Qa = Qa;'
   );
   
   cachedJs = processedJs;
@@ -147,11 +147,11 @@ export function getChapterDecryptor(chapterId: string, cfgToken: string): Decryp
     processedJs
   );
   
-  const prevGlobalIo = (global as any).io;
+  const prevGlobalTo = (global as any).to;
   sandboxFunc(mockWindow, mockDocument, mockLocation, mockNavigator, mockFetch, mockWindow, mockWindow);
-  const ioFunc = (global as any).io;
+  const ioFunc = (global as any).to;
   // Restore the original global scope variable
-  (global as any).io = prevGlobalIo;
+  (global as any).to = prevGlobalTo;
 
   if (typeof ioFunc !== 'function') {
     throw new Error('VM failed to initialize the Axios builder function');
@@ -202,3 +202,164 @@ export function getChapterDecryptor(chapterId: string, cfgToken: string): Decryp
     }
   };
 }
+
+export function getChaptersListDecryptor(mangaId: string, cfgToken: string): Decryptor {
+  const processedJs = loadVMCode();
+  
+  function createRecursiveProxy(name: string, overrides: Record<string, any> = {}): any {
+    function target() {}
+    Object.assign(target, overrides);
+    
+    return new Proxy(target, {
+      get: (t: any, prop: string | symbol) => {
+        if (typeof prop === 'string' && prop in overrides) {
+          return overrides[prop];
+        }
+        if (prop === 'then' || typeof prop === 'symbol') return undefined;
+        return createRecursiveProxy(`${name}.${String(prop)}`);
+      },
+      set: (t: any, prop: string | symbol, val: any) => {
+        if (typeof prop === 'string') {
+          overrides[prop] = val;
+        }
+        return true;
+      },
+      apply: () => createRecursiveProxy(`${name}()`),
+      construct: () => createRecursiveProxy(`new_${name}`)
+    });
+  }
+
+  const documentOverrides = {
+    querySelector: (selector: string) => {
+      if (selector.includes('meta[name="cfg"]') || selector.includes('meta[name=\'cfg\']') || selector === 'meta[name=cfg]') {
+        return createRecursiveProxy('metaElement', {
+          getAttribute: (attr: string) => attr === 'content' ? cfgToken : null
+        });
+      }
+      return null;
+    },
+    querySelectorAll: (selector: string) => {
+      if (selector === 'meta') {
+        const metaEl = createRecursiveProxy('metaElement', {
+          getAttribute: (attr: string) => attr === 'content' ? cfgToken : null,
+          name: 'cfg',
+          content: cfgToken
+        });
+        const list = [metaEl];
+        (list as any).item = (idx: number) => list[idx];
+        return list;
+      }
+      return [];
+    },
+    createElement: (tag: string) => createRecursiveProxy(`element(${tag})`, {
+      style: createRecursiveProxy(`element(${tag}).style`),
+      setAttribute: () => {}
+    }),
+    head: createRecursiveProxy('document.head'),
+    body: createRecursiveProxy('document.body')
+  };
+
+  const mockDocument = createRecursiveProxy('document', documentOverrides);
+  
+  const mockLocation = createRecursiveProxy('location', {
+    href: `https://comix.to/title/${mangaId}-any-slug`,
+    origin: 'https://comix.to',
+    protocol: 'https:',
+    host: 'comix.to',
+    hostname: 'comix.to',
+    port: '',
+    pathname: `/title/${mangaId}-any-slug`,
+    search: '',
+    hash: '',
+    replace: () => {},
+    assign: () => {},
+    reload: () => {},
+    toString: () => `https://comix.to/title/${mangaId}-any-slug`
+  });
+  
+  const mockNavigator = createRecursiveProxy('navigator', {
+    appCodeName: 'Mozilla',
+    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+  });
+  
+  const mockFetch = async () => ({
+    ok: true,
+    status: 200,
+    text: async () => '{"result": {}}',
+    json: async () => ({ result: {} }),
+    headers: new Map()
+  });
+
+  const windowOverrides = {
+    document: mockDocument,
+    location: mockLocation,
+    navigator: mockNavigator,
+    fetch: mockFetch,
+    Object, Array, String, Number, Boolean, RegExp, Date, Math, JSON,
+    console: { log: () => {}, error: () => {}, warn: () => {} },
+    setTimeout, clearTimeout, setInterval, clearInterval, Promise
+  };
+
+  const mockWindow = createRecursiveProxy('window', windowOverrides);
+  mockWindow.window = mockWindow;
+  mockWindow.self = mockWindow;
+  mockWindow.global = mockWindow;
+
+  const sandboxFunc = new Function(
+    'window', 'document', 'location', 'navigator', 'fetch', 'self', 'global',
+    processedJs
+  );
+  
+  const prevGlobalTo = (global as any).to;
+  sandboxFunc(mockWindow, mockDocument, mockLocation, mockNavigator, mockFetch, mockWindow, mockWindow);
+  const ioFunc = (global as any).to;
+  (global as any).to = prevGlobalTo;
+
+  if (typeof ioFunc !== 'function') {
+    throw new Error('VM failed to initialize the Axios builder function');
+  }
+
+  const mockAxios: any = {
+    interceptors: {
+      request: {
+        use: (success: any) => { mockAxios.requestInterceptor = success; }
+      },
+      response: {
+        use: (success: any) => { mockAxios.responseInterceptor = success; }
+      }
+    },
+    defaults: {
+      headers: {
+        common: {}
+      }
+    }
+  };
+
+  ioFunc(mockAxios);
+
+  if (!mockAxios.requestInterceptor || !mockAxios.responseInterceptor) {
+    throw new Error('VM failed to register Axios request/response interceptors');
+  }
+
+  return {
+    async getSignature() {
+      const config = { url: `/manga/${mangaId}/chapters`, headers: {} };
+      const resConfig = await mockAxios.requestInterceptor(config);
+      return resConfig.params?._ || '';
+    },
+    async decryptResponse(encryptedData: any) {
+      const rawResponse = {
+        data: encryptedData,
+        headers: { 'x-enc': '1' },
+        config: {
+          url: `/manga/${mangaId}/chapters`,
+          baseURL: '/api/v1',
+          method: 'get'
+        }
+      };
+      const res = await mockAxios.responseInterceptor(rawResponse);
+      return res.data;
+    }
+  };
+}
+
